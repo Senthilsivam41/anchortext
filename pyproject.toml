@@ -18,7 +18,12 @@ dependencies = [
 
 [project.optional-dependencies]
 ocr = ["paddleocr>=3"]
+
+[dependency-groups]
 dev = ["pytest>=8", "httpx>=0.27"]
+
+[tool.uv]
+default-groups = ["dev"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
