@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review {{ review_id }}</title>
+  <style>
+    :root { color-scheme: light; font-family: "Iowan Old Style", Palatino, Georgia, serif; }
+    body { margin: 0; background: #f4f1ea; color: #1c1915; }
+    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { font-size: 1.6rem; font-weight: 600; margin: 0 0 8px; }
+    p.lede { margin: 0 0 24px; color: #4a453c; }
+    form.key, article { background: #fffdf8; border: 1px solid #d9d2c5; padding: 16px; margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 6px; }
+    input, select { font: inherit; padding: 8px; width: 100%; box-sizing: border-box; margin-bottom: 12px; }
+    button { font: inherit; background: #1c1915; color: #f4f1ea; border: 0; padding: 8px 14px; cursor: pointer; }
+    .sheet { position: relative; display: inline-block; max-width: 100%; background: white; }
+    .sheet img { display: block; max-width: 100%; height: auto; }
+    .sheet svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    polygon { fill: rgba(180, 83, 9, 0.2); stroke: #9a3412; stroke-width: 2; }
+    .meta { font-family: ui-monospace, monospace; font-size: 0.8rem; color: #4a453c; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Held text</h1>
+    {% if needs_key %}
+      <p class="lede">Enter the API key for this account to review held regions.</p>
+      <form class="key" method="post" action="/reviews/{{ review_id }}/session">
+        <label for="api_key">API key</label>
+        <input id="api_key" name="api_key" type="password" autocomplete="current-password" required>
+        <button type="submit">Continue</button>
+      </form>
+    {% elif task.status == "released" %}
+      <p class="lede">These regions are released. Review did not add a charge.</p>
+      {% for annotation in task.annotations %}
+        <article>
+          <p>{{ annotation.text_normalized }}</p>
+          <p class="meta">{{ annotation.text_class }} · raw {{ annotation.text_raw }}</p>
+        </article>
+      {% endfor %}
+    {% else %}
+      <p class="lede">Accept or edit each held region. This does not add a charge.</p>
+      {% if detection %}
+        <div class="sheet">
+          <img src="/reviews/{{ review_id }}/image" alt="Submitted image" width="{{ detection.image_width }}" height="{{ detection.image_height }}">
+          <svg viewBox="0 0 {{ detection.image_width }} {{ detection.image_height }}" aria-hidden="true">
+            {% for annotation in task.annotations if annotation.release_state == "held" %}
+              <polygon points="{% for point in annotation.polygon %}{{ point[0] }},{{ point[1] }} {% endfor %}"></polygon>
+            {% endfor %}
+          </svg>
+        </div>
+      {% endif %}
+      {% for annotation in task.annotations if annotation.release_state == "held" %}
+        <article>
+          <p class="meta">{{ annotation.text_class }} · confidence {{ "%.2f"|format(annotation.confidence) }}</p>
+          <form method="post" action="/reviews/{{ review_id }}/corrections">
+            <input type="hidden" name="annotation_id" value="{{ annotation.id }}">
+            <input type="hidden" name="accept" value="false">
+            <label for="text-{{ annotation.id }}">Normalized text</label>
+            <input id="text-{{ annotation.id }}" name="text_normalized" value="{{ annotation.text_normalized }}">
+            <label for="class-{{ annotation.id }}">Text class</label>
+            <select id="class-{{ annotation.id }}" name="text_class">
+              {% for name in ["dimension", "tolerance", "thread_callout", "surface_finish", "part_tag", "revision", "sheet_metadata", "note"] %}
+                <option value="{{ name }}" {% if name == annotation.text_class %}selected{% endif %}>{{ name }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit">Save edit</button>
+          </form>
+          <form method="post" action="/reviews/{{ review_id }}/corrections">
+            <input type="hidden" name="annotation_id" value="{{ annotation.id }}">
+            <input type="hidden" name="accept" value="true">
+            <button type="submit">Accept as read</button>
+          </form>
+        </article>
+      {% endfor %}
+    {% endif %}
+  </main>
+</body>
+</html>
