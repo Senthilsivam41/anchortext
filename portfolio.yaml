@@ -1,0 +1,33 @@
+schemaVersion: portfolio.dev/v1
+kind: Product
+metadata:
+  id: anchortext
+  name: Anchortext
+  description: Pay-as-you-go API that reads oriented engineering text from a 2D image and matches it to a registered reference.
+  stage: lab
+  owners:
+    - sendil
+spec:
+  standalone: true
+  category: annotation
+  runtimes:
+    python: "3.12"
+    api: 8000
+  commands:
+    setup: make setup
+    demo: make demo
+    dev: make dev
+    check: make check
+  services: []
+  interfaces:
+    http:
+      basePath: /v1
+      port: 8000
+  integrations:
+    consumes:
+      - s3
+    produces: []
+  docs:
+    quickstart: docs/quickstart.md
+    architecture: docs/architecture.md
+    configuration: docs/configuration.md
