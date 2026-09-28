@@ -4,6 +4,36 @@ Anchortext is a pay-as-you-go API that reads text from a 2D image, including eng
 
 The recognizer is self-hosted PaddleOCR. Price follows **work level** (`standard` or `oriented`), not which OCR engine ran.
 
+## Setup
+
+Requires [uv](https://docs.astral.sh/uv/) and Python 3.12 (pinned in `.python-version`).
+
+```bash
+uv sync
+export ANCHORTEXT_API_KEY="choose-a-key"
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+`uv sync` installs the API and the test tools. It does not install PaddleOCR. Add the recognizer when you want live detection:
+
+```bash
+uv sync --extra ocr
+```
+
+Send the key on each API call as `X-API-Key`. The review page asks for the same key once and stores it in a cookie.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANCHORTEXT_API_KEY` | empty | Hashed at startup and required for `/v1` |
+| `ANCHORTEXT_DATABASE_URL` | `sqlite:///./data/anchortext.db` | SQLite ledger for match config, reviews, and charges |
+| `ANCHORTEXT_IMAGE_DIR` | `./data/images` | Stored images for the review page |
+
+Reference JSON is read from S3 at detect time (`s3://bucket/key`). The process needs AWS credentials that can `GetObject` on that URI.
+
+```bash
+uv run pytest
+```
+
 ## Goals
 
 - Extract every text region from a 2D image as a quadrilateral with an orientation.
