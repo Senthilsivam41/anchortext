@@ -64,7 +64,7 @@ The product is billable only when all six exist.
 
 ## Flow
 
-A sync detect call does not wait on a person. A one-pass image is `standard`. A large sheet, or text at 90, 180, 270, or a slight angle, takes the tiled, rectified, four-way path and is `oriented`. Detection runs off the API event loop.
+A sync detect call does not wait on a person. A small image whose quadrilaterals are horizontal is `standard`. Upside-down text on a horizontal baseline stays on that pass. If that read misses the release bar, the region is held and the work level stays `standard`. A quadrilateral whose longest edge is at least 20° from horizontal discards the standard read, runs the tiled, rectified, four-angle path, and is `oriented`. An image whose longest side is at least 1600 pixels skips the standard pass and starts on that same path. 1600 is the starting cutoff. Detection runs off the API event loop.
 
 ```mermaid
 flowchart LR
